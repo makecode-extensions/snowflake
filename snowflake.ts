@@ -43,7 +43,8 @@ namespace snowflake {
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
     let _snow: number[][] = []
-    let _BG: number[] = default_BG
+    let _BG: number[] = []
+    _BG = default_BG
 
     control.inBackground(function update() {
         while (true) {
@@ -74,13 +75,13 @@ namespace snowflake {
                 r = t % 16
                 g = (t >> 4) % 16
                 b = (t >> 8) % 16
-                if (x % 2) setpixel(y * 2, x, neopixel.rgb(r, g, b))
-                else setpixel(15 - y * 2, x, neopixel.rgb(r, g, b))
+                if (x % 2) setpixel(y * 2, x, [r, g, b])
+                else setpixel(15 - y * 2, x, [r, g, b])
                 r = (t >> 12) % 16
                 g = (t >> 16) % 16
                 b = (t >> 20) % 16
-                if (x % 2) setpixel(y * 2 + 1, x, neopixel.rgb(r, g, b))
-                else setpixel(14 - y * 2, x, neopixel.rgb(r, g, b))
+                if (x % 2) setpixel(y * 2 + 1, x, [r, g, b])
+                else setpixel(14 - y * 2, x, [r, g, b])
             }
     }
 
@@ -106,48 +107,21 @@ namespace snowflake {
         load_bg(_BG)
     }
 
-    // get red channel
-    function getR(color: number): number {
-        return (color >> 16) % 256
-    }
-
-    // get green channel
-    function getG(color: number): number {
-        return (color >> 8) % 256
-    }
-
-    // get blue chnnel
-    function getB(color: number): number {
-        return color % 256
-    }
-
     // overlying two color
-    function overlying(row: number, col: number, color: number, add: boolean): void {
+    function overlying(row: number, col: number, color: number[], add: boolean): void {
         let c = getpixel(row, col)
-        let r0 = 0
-        let g0 = 0
-        let b0 = 0
-        let r1 = 0
-        let g1 = 0
-        let b1 = 0
-        r0 = getR(c)
-        g0 = getG(c)
-        b0 = getB(c)
-        r1 = getR(color)
-        g1 = getG(color)
-        b1 = getB(color)
-        if (add) setpixel(row, col, neopixel.rgb(r0 + r1, g0 + g1, b0 + b1))
-        else setpixel(row, col, neopixel.rgb(r0 - r1, g0 - g1, b0 - b1))
+        if (add) setpixel(row, col, [c[0] + color[0], c[1] + color[1], c[2] + color[2]])
+        else setpixel(row, col, [c[0] - color[0], c[1] - color[1], c[2] - color[2]])
     }
 
     //% block="set pixel row %row|col %col|color %color"
-    function setpixel(row: number, col: number, color: number): void {
-        if (col % 2) _np.setPixelColor(col * 16 + 15 - row, color)
-        else _np.setPixelColor(col * 16 + row, color)
+    function setpixel(row: number, col: number, color: number[]): void {
+        if (col % 2) _np.setPixelColor(col * 16 + 15 - row, neopixel.rgb(color[0], color[1], color[2]))
+        else _np.setPixelColor(col * 16 + row, neopixel.rgb(color[0], color[1], color[2]))
     }
 
     //% block="get pixel row %row|col %col"
-    function getpixel(row: number, col: number): number {
+    function getpixel(row: number, col: number): number[] {
         let r = 0
         let g = 0
         let b = 0
@@ -166,7 +140,7 @@ namespace snowflake {
             r = _np.buf[offset + 1];
         }
         b = _np.buf[offset + 2];
-        return neopixel.rgb(r, g, b)
+        return [r, g, b]
     }
 
     /**
@@ -174,7 +148,7 @@ namespace snowflake {
      * 
      */
     //% block="config Pin %pin|cover %cover|threshold %threshold|snowfall %snowfall|most at a time %MostAtATime|speed %speed"
-    //% cover.defl=true
+    //% cover.defl=false
     //% pin.defl=DigitalPin.P1
     //% threshold.defl=8 threshold.max=100 threshold.min=1
     //% snowfall.defl=50 snowfall.max=100 snowfall.min=1
@@ -198,7 +172,7 @@ namespace snowflake {
     /**
      * start running
      */
-    //% block="start snow"
+    //% block="start"
     //% weight = 80
     export function start(): void {
         _update = true
@@ -207,7 +181,7 @@ namespace snowflake {
     /**
      * pause running
      */
-    //% block="pause snow"
+    //% block="pause"
     //% weight = 70
     export function pause(): void {
         _update = false
@@ -216,7 +190,7 @@ namespace snowflake {
     /**
      * Restart again
      */
-    //% block="reset snow"
+    //% block="reset"
     //% weight = 60
     export function reset() {
         _pile = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -245,12 +219,12 @@ namespace snowflake {
         for (let i = 0; i < _snow.length; i++) {
             let c = _snow[i]
             if (c[0] > -1) {
-                overlying(c[0], c[1], neopixel.rgb(c[2], c[2], c[2]), false)
+                overlying(c[0], c[1], [c[2], c[2], c[2]], false)
             }
             c[0] += 1
             c[1] += Math.randomRange(-1, 1)
             c[1] = Math.max(0, Math.min(c[1], 15))
-            overlying(c[0], c[1], neopixel.rgb(c[2], c[2], c[2]), true)
+            overlying(c[0], c[1], [c[2], c[2], c[2]], true)
         }
     }
 
@@ -276,12 +250,12 @@ namespace snowflake {
                     b = _pile[row - 11][col + 1] >= _threshold ? true : false
                 }
                 if (_pile[row - 11][col] >= _threshold) {
-                    overlying(c[0], c[1], neopixel.rgb(c[2], c[2], c[2]), false)
+                    overlying(c[0], c[1], [c[2], c[2], c[2]], false)
                     if (a && b) {
                         if (_pile[row - 12][col] < _threshold) {
                             _pile[row - 12][col] += c[2]
                             if (_pile[row - 12][col] >= _threshold) {
-                                overlying(c[0], c[1], neopixel.rgb(8, 8, 8), true)
+                                overlying(c[0], c[1], [8, 8, 8], true)
                                 _line()
                             }
                         }
@@ -294,7 +268,7 @@ namespace snowflake {
             for (let i = 0; i < n; i++) {
                 let c = _snow[n - 1 - i]
                 if (c[0] > 14) {
-                    overlying(c[0], c[1], neopixel.rgb(c[2], c[2], c[2]), false)
+                    overlying(c[0], c[1], [c[2], c[2], c[2]], false)
                     _snow.removeAt(n - 1 - i)
                 }
             }
@@ -309,29 +283,29 @@ namespace snowflake {
                 return
         }
         for (let i = 0; i < 16; i++) {
-            overlying(15, i, neopixel.rgb(15, 0, 0), true)
+            overlying(15, i, [15, 0, 0], true)
         }
         _np.show()
         basic.pause(300)
         for (let i = 0; i < 16; i++) {
-            overlying(15, i, neopixel.rgb(15, 0, 0), false)
+            overlying(15, i, [15, 0, 0], false)
         }
         for (let j = 0; j < 3; j++) {
             for (let i = 0; i < 16; i++) {
                 if (_pile[3 - j][i] >= _threshold)
-                    overlying(15 - j, i, neopixel.rgb(8, 8, 8), false)
+                    overlying(15 - j, i, [8, 8, 8], false)
             }
             _np.show()
             basic.pause(300)
             for (let i = 0; i < 16; i++) {
                 _pile[3 - j][i] = _pile[2 - j][i]
                 if (_pile[3 - j][i] >= _threshold)
-                    overlying(15 - j, i, neopixel.rgb(8, 8, 8), true)
+                    overlying(15 - j, i, [8, 8, 8], true)
             }
         }
         for (let i = 0; i < 16; i++)
             if (_pile[0][i] >= _threshold)
-                overlying(12, i, neopixel.rgb(8, 8, 8), false)
+                overlying(12, i, [8, 8, 8], false)
         _pile[0] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     }
 }
