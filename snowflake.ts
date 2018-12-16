@@ -189,8 +189,8 @@ namespace snowflake {
         _MostAtATime = MostAtATime
         _speed = speed
         _np = neopixel.create(_pin, 256, NeoPixelMode.RGB)
-        load_background(_BG)
         _np.clear()
+        load_bg(_BG)
         for (let i = 0; i < 16; i++)
             _pile[4][i] = _threshold
     }
