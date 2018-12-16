@@ -198,7 +198,7 @@ namespace snowflake {
     /**
      * start running
      */
-    //% block="start"
+    //% block="start snow"
     //% weight = 80
     export function start(): void {
         _update = true
@@ -207,7 +207,7 @@ namespace snowflake {
     /**
      * pause running
      */
-    //% block="pause"
+    //% block="pause snow"
     //% weight = 70
     export function pause(): void {
         _update = false
@@ -216,7 +216,7 @@ namespace snowflake {
     /**
      * Restart again
      */
-    //% block="reset"
+    //% block="reset snow"
     //% weight = 60
     export function reset() {
         _pile = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
